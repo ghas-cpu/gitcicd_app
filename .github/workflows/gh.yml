@@ -1,0 +1,42 @@
+name: CI and CD to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # المرحلة الأولى: الفحص (CI)
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: سحب الكود
+        uses: actions/checkout@v4
+
+      - name: فحص وجود الملفات الأساسية (CI Check)
+        run: |
+          test -f index.html
+          test -f style.css
+          test -f app.js
+          echo "تم فحص جميع الملفات بنجاح!"
+
+      - name: تجهيز الملفات للنشر
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+  # المرحلة الثانية: النشر المباشر (CD)
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: النشر على الإنترنت
+        id: deployment
+        uses: actions/deploy-pages@v4
